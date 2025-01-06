@@ -3,8 +3,10 @@ module win-reg-sensor
 go 1.23
 
 require (
-	go.viam.com/rdk v0.56.0
+	github.com/pkg/errors v0.9.1
+	go.viam.com/rdk v0.56.1-0.20250104155204-416614e89f5f
 	go.viam.com/utils v0.1.119
+	golang.org/x/sys v0.27.0
 )
 
 require (
@@ -93,7 +95,6 @@ require (
 	github.com/pion/stun v0.6.1 // indirect
 	github.com/pion/transport/v2 v2.2.10 // indirect
 	github.com/pion/turn/v2 v2.1.6 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/cors v1.11.1 // indirect
@@ -128,7 +129,6 @@ require (
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect

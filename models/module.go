@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 
+	errw "github.com/pkg/errors"
 	"go.viam.com/rdk/components/sensor"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/utils/rpc"
+	"golang.org/x/sys/windows/registry"
 )
 
 var (
@@ -24,24 +26,8 @@ func init() {
 }
 
 type Config struct {
-	/*
-		Put config attributes here. There should be public/exported fields
-		with a `json` parameter at the end of each attribute.
-
-		Example config struct:
-			type Config struct {
-				Pin   string `json:"pin"`
-				Board string `json:"board"`
-				MinDeg *float64 `json:"min_angle_deg,omitempty"`
-			}
-
-		If your model does not need a config, replace *Config in the init
-		function with resource.NoNativeConfig
-	*/
-
-	/* Uncomment this if your model does not need to be validated
-	   and has no implicit dependecies. */
-	// resource.TriviallyValidateConfig
+	Keys []string `json:"keys"`
+	resource.TriviallyValidateConfig
 }
 
 // Validate ensures all parts of the config are valid and important fields exist.
@@ -49,7 +35,6 @@ type Config struct {
 // The path is the JSON path in your robot's config (not the `Config` struct) to the
 // resource being validated; e.g. "components.0".
 func (cfg *Config) Validate(path string) ([]string, error) {
-	// Add config validation code here
 	return nil, nil
 }
 
@@ -62,13 +47,9 @@ type winRegSensorRegistry struct {
 	cancelCtx  context.Context
 	cancelFunc func()
 
-	/* Uncomment this if your model does not need to reconfigure. */
-	// resource.TriviallyReconfigurable
+	resource.TriviallyReconfigurable
 
-	// Uncomment this if the model does not have any goroutines that
-	// need to be shut down while closing.
-	// resource.TriviallyCloseable
-
+	resource.TriviallyCloseable
 }
 
 func newWinRegSensorRegistry(ctx context.Context, deps resource.Dependencies, rawConf resource.Config, logger logging.Logger) (sensor.Sensor, error) {
@@ -102,11 +83,43 @@ func (s *winRegSensorRegistry) NewClientFromConn(ctx context.Context, conn rpc.C
 	panic("not implemented")
 }
 
-func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]interface{}) (map[string]interface{}, error) {
-	panic("not implemented")
+func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]any) (map[string]any, error) {
+	ret := make(map[string]any)
+	s.logger.Infof("reading %d keys", len(s.cfg.Keys))
+	for _, key := range s.cfg.Keys {
+		subMap := make(map[string]any)
+		ret[key] = subMap
+		err := func() error {
+			s.logger.Infof("opening key %s", key)
+			k, err := registry.OpenKey(registry.LOCAL_MACHINE, key, registry.QUERY_VALUE)
+			if err != nil {
+				return errw.Wrap(err, key)
+			}
+			defer k.Close()
+			names, err := k.ReadValueNames(0)
+			if err != nil {
+				return errw.Wrap(err, key)
+			}
+			for _, name := range names {
+				val, _, err := k.GetStringValue(name)
+				if err == registry.ErrUnexpectedType {
+					// todo: handle some non-string types
+					val = "non_string"
+				} else if err != nil {
+					return errw.Wrap(err, key)
+				}
+				subMap[name] = val
+			}
+			return nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
 }
 
-func (s *winRegSensorRegistry) DoCommand(ctx context.Context, cmd map[string]interface{}) (map[string]interface{}, error) {
+func (s *winRegSensorRegistry) DoCommand(ctx context.Context, cmd map[string]any) (map[string]any, error) {
 	panic("not implemented")
 }
 

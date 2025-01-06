@@ -1,7 +1,7 @@
 {
   "$schema": "https://dl.viam.dev/module.schema.json",
   "module_id": "viam:win-reg-sensor",
-  "visibility": "private",
+  "visibility": "public_unlisted",
   "url": "https://github.com/viam-labs/win-reg-sensor",
   "description": "Modular sensor component: registry",
   "models": [
@@ -10,6 +10,6 @@
       "model": "viam:win-reg-sensor:registry"
     }
   ],
-  "entrypoint": "./run.sh",
+  "entrypoint": "win-reg-sensor.exe",
   "first_run": ""
 }
