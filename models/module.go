@@ -85,12 +85,12 @@ func (s *winRegSensorRegistry) NewClientFromConn(ctx context.Context, conn rpc.C
 
 func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]any) (map[string]any, error) {
 	ret := make(map[string]any)
-	s.logger.Infof("reading %d keys", len(s.cfg.Keys))
+	s.logger.Debugf("reading %d keys", len(s.cfg.Keys))
 	for _, key := range s.cfg.Keys {
 		subMap := make(map[string]any)
 		ret[key] = subMap
 		err := func() error {
-			s.logger.Infof("opening key %s", key)
+			s.logger.Debugf("opening key %s", key)
 			k, err := registry.OpenKey(registry.LOCAL_MACHINE, key, registry.QUERY_VALUE)
 			if err != nil {
 				return errw.Wrap(err, key)
