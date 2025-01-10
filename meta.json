@@ -10,6 +10,13 @@
       "model": "viam:win-reg-sensor:registry"
     }
   ],
+  "build": {
+    "build": "make module.tar.gz",
+    "arch": [
+      "windows/amd64"
+    ],
+    "path": "module.tar.gz"
+  },
   "entrypoint": "win-reg-sensor.exe",
   "first_run": ""
 }
