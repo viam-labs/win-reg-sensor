@@ -78,8 +78,12 @@ func (s *winRegSensorRegistry) Name() resource.Name {
 }
 
 func (s *winRegSensorRegistry) Reconfigure(ctx context.Context, deps resource.Dependencies, conf resource.Config) error {
-	// Put reconfigure code here
-	return errUnimplemented
+	myConf, err := resource.NativeConfig[*Config](conf)
+	if err != nil {
+		return err
+	}
+	s.cfg = myConf
+	return nil
 }
 
 func (s *winRegSensorRegistry) NewClientFromConn(ctx context.Context, conn rpc.ClientConn, remoteName string, name resource.Name, logger logging.Logger) (sensor.Sensor, error) {
