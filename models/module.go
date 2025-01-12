@@ -1,8 +1,11 @@
+//go:build windows
+
 package models
 
 import (
 	"context"
 	"errors"
+	"strings"
 
 	errw "github.com/pkg/errors"
 	"go.viam.com/rdk/components/sensor"
@@ -86,9 +89,14 @@ func (s *winRegSensorRegistry) NewClientFromConn(ctx context.Context, conn rpc.C
 func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]any) (map[string]any, error) {
 	ret := make(map[string]any)
 	s.logger.Debugf("reading %d keys", len(s.cfg.Keys))
-	for _, key := range s.cfg.Keys {
+	for _, fullKey := range s.cfg.Keys {
 		subMap := make(map[string]any)
-		ret[key] = subMap
+		// note: in colon/subKey mode, we set a single value instead of the submap.
+		// we do this because triggers can't access nested maps.
+		key, subKey, hasColon := strings.Cut(fullKey, ":")
+		if !hasColon {
+			ret[fullKey] = subMap
+		}
 		err := func() error {
 			s.logger.Debugf("opening key %s", key)
 			k, err := registry.OpenKey(registry.LOCAL_MACHINE, key, registry.QUERY_VALUE)
@@ -109,6 +117,9 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 					return errw.Wrap(err, key)
 				}
 				subMap[name] = val
+			}
+			if hasColon {
+				ret[fullKey] = subMap[subKey]
 			}
 			return nil
 		}()
