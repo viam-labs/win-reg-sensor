@@ -17,6 +17,6 @@
     ],
     "path": "module.tar.gz"
   },
-  "entrypoint": "win-reg-sensor.exe",
+  "entrypoint": "win-reg-sensor",
   "first_run": ""
 }
