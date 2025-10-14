@@ -25,6 +25,9 @@ func mainWithArgs(ctx context.Context, args []string, logger logging.Logger) err
 	if err = winRegSensor.AddModelFromRegistry(ctx, sensor.API, models.Registry); err != nil {
 		return err
 	}
+	if err = winRegSensor.AddModelFromRegistry(ctx, sensor.API, models.EventViewer); err != nil {
+		return err
+	}
 
 	err = winRegSensor.Start(ctx)
 	defer winRegSensor.Close(ctx)

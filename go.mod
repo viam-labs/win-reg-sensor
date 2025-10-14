@@ -3,6 +3,7 @@ module win-reg-sensor
 go 1.23.9
 
 require (
+	github.com/google/winops v0.0.0-20250911022706-fb2ef9d110be
 	github.com/pkg/errors v0.9.1
 	go.viam.com/rdk v0.56.1-0.20250104155204-416614e89f5f
 	go.viam.com/utils v0.1.143
@@ -50,6 +51,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
+	github.com/golang/glog v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
