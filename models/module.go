@@ -135,7 +135,8 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 }
 
 func (s *winRegSensorRegistry) DoCommand(ctx context.Context, cmd map[string]any) (map[string]any, error) {
-	panic("not implemented")
+	s.logger.Infof("DoCommand not implemented")
+	return nil, nil
 }
 
 func (s *winRegSensorRegistry) Close(context.Context) error {
