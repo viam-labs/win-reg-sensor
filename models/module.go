@@ -5,6 +5,8 @@ package models
 import (
 	"context"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"strings"
 
 	errw "github.com/pkg/errors"
@@ -12,6 +14,7 @@ import (
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/utils/rpc"
+
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -29,7 +32,8 @@ func init() {
 }
 
 type Config struct {
-	Keys []string `json:"keys"`
+	Keys     []string `json:"keys"`
+	Programs []string `json:"programs"`
 	resource.TriviallyValidateConfig
 }
 
@@ -87,11 +91,24 @@ func (s *winRegSensorRegistry) Reconfigure(ctx context.Context, deps resource.De
 }
 
 func (s *winRegSensorRegistry) NewClientFromConn(ctx context.Context, conn rpc.ClientConn, remoteName string, name resource.Name, logger logging.Logger) (sensor.Sensor, error) {
-	panic("not implemented")
+	return nil, errUnimplemented
 }
 
 func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]any) (map[string]any, error) {
 	ret := make(map[string]any)
+	s.logger.Debugf("reading %d programs", len(s.cfg.Programs))
+	for _, programName := range s.cfg.Programs {
+		version, err := getWindowsProgramVersion(programName)
+		if err != nil {
+			// Not installed or not found
+			s.logger.Warnf("%v", err)
+			version = "Not installed"
+		}
+
+		s.logger.Infof("%s version details: %s", programName, version)
+		ret[programName] = version
+	}
+
 	s.logger.Debugf("reading %d keys", len(s.cfg.Keys))
 	for _, fullKey := range s.cfg.Keys {
 		subMap := make(map[string]any)
@@ -136,11 +153,54 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 
 func (s *winRegSensorRegistry) DoCommand(ctx context.Context, cmd map[string]any) (map[string]any, error) {
 	s.logger.Infof("DoCommand not implemented")
-	return nil, nil
+	return nil, errUnimplemented
 }
 
 func (s *winRegSensorRegistry) Close(context.Context) error {
 	// Put close code here
 	s.cancelFunc()
 	return nil
+}
+
+func getWindowsProgramVersion(programName string) (string, error) {
+	var subkey string
+
+	// Attempt to find the program's uninstall information in the registry.
+	if programName != "" {
+		subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`
+
+		k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
+		if err != nil {
+			return "", err
+		}
+		defer k.Close()
+
+		subkeys, err := k.ReadSubKeyNames(-1)
+		if err != nil {
+			return "", err
+		}
+
+		for _, name := range subkeys {
+			appKeyPath := filepath.Join(subkey, name)
+			appKey, err := registry.OpenKey(registry.LOCAL_MACHINE, appKeyPath, registry.QUERY_VALUE)
+			if err != nil {
+				continue
+			}
+			defer appKey.Close()
+
+			displayName, _, err := appKey.GetStringValue("DisplayName")
+			if err != nil {
+				continue
+			}
+
+			if strings.Contains(displayName, programName) {
+				version, _, err := appKey.GetStringValue("DisplayVersion")
+				if err != nil {
+					return "", err
+				}
+				return version, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("program '%s' not found or version information unavailable", programName)
 }
