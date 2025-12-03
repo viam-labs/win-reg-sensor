@@ -9,6 +9,10 @@ This is a viam module that reads windows registry keys using the golang [registr
   "keys": [
     "SOFTWARE\\Viam",
     "SOFTWARE\\Viam:version"
+  ],
+  "programs": [
+    "Google Chrome",
+    "Microsoft Edge"
   ]
 }
 ```
@@ -16,6 +20,8 @@ This is a viam module that reads windows registry keys using the golang [registr
 This produces output:
 
 ```json
+Google Chrome    "142.0.7444.176"
+Microsoft Edge   "142.0.3595.94"
 {
   "SOFTWARE\\Viam": {
     "version": "123",
