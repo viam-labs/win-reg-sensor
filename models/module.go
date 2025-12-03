@@ -167,7 +167,8 @@ func getWindowsProgramVersion(programName string) (string, error) {
 
 	// Attempt to find the program's uninstall information in the registry.
 	if programName != "" {
-		subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`
+		// subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall` // Hive for Win32 applications
+		subkey = `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`
 
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
 		if err != nil {
