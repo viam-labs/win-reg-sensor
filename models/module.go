@@ -167,7 +167,7 @@ func getWindowsProgramVersion(programName string) (string, error) {
 
 	// Attempt to find the program's uninstall information in the registry.
 	if programName != "" {
-		// subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall` // Hive for Win32 applications
+		// Hive for Win64 applications
 		subkey = `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`
 
 		k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
@@ -177,6 +177,42 @@ func getWindowsProgramVersion(programName string) (string, error) {
 		defer k.Close()
 
 		subkeys, err := k.ReadSubKeyNames(-1)
+		if err != nil {
+			return "", err
+		}
+
+		for _, name := range subkeys {
+			appKeyPath := filepath.Join(subkey, name)
+			appKey, err := registry.OpenKey(registry.LOCAL_MACHINE, appKeyPath, registry.QUERY_VALUE)
+			if err != nil {
+				continue
+			}
+			defer appKey.Close()
+
+			displayName, _, err := appKey.GetStringValue("DisplayName")
+			if err != nil {
+				continue
+			}
+
+			if strings.Contains(displayName, programName) {
+				version, _, err := appKey.GetStringValue("DisplayVersion")
+				if err != nil {
+					return "", err
+				}
+				return version, nil
+			}
+		}
+
+		// Hive for Win32 applications
+		subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`
+
+		k, err = registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
+		if err != nil {
+			return "", err
+		}
+		defer k.Close()
+
+		subkeys, err = k.ReadSubKeyNames(-1)
 		if err != nil {
 			return "", err
 		}
