@@ -167,21 +167,22 @@ func getWindowsProgramVersion(programName string) (string, error) {
 		return "", fmt.Errorf("program name cannot be empty")
 	}
 
-	// Search Win64 applications first
-	version, err := searchRegistryHive(`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`, programName)
-	if err == nil {
-		return version, nil
-	}
-
-	// Search Win32 applications
-	version, err = searchRegistryHive(`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, programName)
-	if err == nil {
-		return version, nil
+	for _, hive := range []string{
+		// win64
+		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,
+		//win32
+		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`,
+	} {
+		version, err := searchRegistryHive(hive, programName)
+		if err == nil {
+			return version, nil
+		}
 	}
 
 	return "", fmt.Errorf("program '%s' not found or version information unavailable", programName)
 }
 
+// searches for programName in HKLM/subkey, returns an error if not found.
 func searchRegistryHive(subkey, programName string) (string, error) {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
 	if err != nil {
