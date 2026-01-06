@@ -163,45 +163,59 @@ func (s *winRegSensorRegistry) Close(context.Context) error {
 }
 
 func getWindowsProgramVersion(programName string) (string, error) {
-	var subkey string
+	if programName == "" {
+		return "", fmt.Errorf("program name cannot be empty")
+	}
 
-	// Attempt to find the program's uninstall information in the registry.
-	if programName != "" {
-		// subkey = `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall` // Hive for Win32 applications
-		subkey = `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`
-
-		k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
-		if err != nil {
-			return "", err
-		}
-		defer k.Close()
-
-		subkeys, err := k.ReadSubKeyNames(-1)
-		if err != nil {
-			return "", err
-		}
-
-		for _, name := range subkeys {
-			appKeyPath := filepath.Join(subkey, name)
-			appKey, err := registry.OpenKey(registry.LOCAL_MACHINE, appKeyPath, registry.QUERY_VALUE)
-			if err != nil {
-				continue
-			}
-			defer appKey.Close()
-
-			displayName, _, err := appKey.GetStringValue("DisplayName")
-			if err != nil {
-				continue
-			}
-
-			if strings.Contains(displayName, programName) {
-				version, _, err := appKey.GetStringValue("DisplayVersion")
-				if err != nil {
-					return "", err
-				}
-				return version, nil
-			}
+	for _, hive := range []string{
+		// win64
+		`SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`,
+		//win32
+		`SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`,
+	} {
+		version, err := searchRegistryHive(hive, programName)
+		if err == nil {
+			return version, nil
 		}
 	}
+
 	return "", fmt.Errorf("program '%s' not found or version information unavailable", programName)
+}
+
+// searches for programName in HKLM/subkey, returns an error if not found.
+func searchRegistryHive(subkey, programName string) (string, error) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, subkey, registry.QUERY_VALUE|registry.ENUMERATE_SUB_KEYS)
+	if err != nil {
+		return "", err
+	}
+	defer k.Close()
+
+	subkeys, err := k.ReadSubKeyNames(-1)
+	if err != nil {
+		return "", err
+	}
+
+	for _, name := range subkeys {
+		appKeyPath := filepath.Join(subkey, name)
+		appKey, err := registry.OpenKey(registry.LOCAL_MACHINE, appKeyPath, registry.QUERY_VALUE)
+		if err != nil {
+			continue
+		}
+		defer appKey.Close()
+
+		displayName, _, err := appKey.GetStringValue("DisplayName")
+		if err != nil {
+			continue
+		}
+
+		if strings.Contains(displayName, programName) {
+			version, _, err := appKey.GetStringValue("DisplayVersion")
+			if err != nil {
+				return "", err
+			}
+			return version, nil
+		}
+	}
+
+	return "", fmt.Errorf("not found in %s", subkey)
 }
