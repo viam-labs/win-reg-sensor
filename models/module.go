@@ -101,7 +101,7 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 		version, err := getWindowsProgramVersion(programName)
 		if err != nil {
 			// Not installed or not found
-			s.logger.Warnf("%v", err)
+			s.logger.Debugf("%v", err)
 			version = "Not installed"
 		}
 
