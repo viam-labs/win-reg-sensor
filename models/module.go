@@ -162,6 +162,10 @@ func (s *winRegSensorRegistry) Close(context.Context) error {
 	return nil
 }
 
+func (s *winRegSensorRegistry) Status(context.Context) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
 func getWindowsProgramVersion(programName string) (string, error) {
 	if programName == "" {
 		return "", fmt.Errorf("program name cannot be empty")
