@@ -4,6 +4,8 @@ go 1.25.1
 
 replace go.viam.com/rdk => github.com/viamrobotics/rdk v0.120.1-0.20260408201653-cc73814c4c10
 
+replace go.viam.com/api => github.com/jmatth/viam-api v0.0.0-20260408195056-1001810cb8c2
+
 require (
 	github.com/pkg/errors v0.9.1
 	go.viam.com/rdk v0.117.0
