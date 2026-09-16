@@ -151,6 +151,10 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 	return ret, nil
 }
 
+func (s *winRegSensorRegistry) Status(ctx context.Context) (map[string]any, error) {
+	return nil, errUnimplemented
+}
+
 func (s *winRegSensorRegistry) DoCommand(ctx context.Context, cmd map[string]any) (map[string]any, error) {
 	s.logger.Infof("DoCommand not implemented")
 	return nil, errUnimplemented
