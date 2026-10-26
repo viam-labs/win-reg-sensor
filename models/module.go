@@ -124,7 +124,7 @@ func (s *winRegSensorRegistry) Readings(ctx context.Context, extra map[string]an
 			if err != nil {
 				return errw.Wrap(err, key)
 			}
-			defer k.Close()
+			defer func() { _ = k.Close() }()
 			names, err := k.ReadValueNames(0)
 			if err != nil {
 				return errw.Wrap(err, key)
@@ -192,7 +192,7 @@ func searchRegistryHive(subkey, programName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer k.Close()
+	defer func() { _ = k.Close() }()
 
 	subkeys, err := k.ReadSubKeyNames(-1)
 	if err != nil {
@@ -205,7 +205,7 @@ func searchRegistryHive(subkey, programName string) (string, error) {
 		if err != nil {
 			continue
 		}
-		defer appKey.Close()
+		defer func() { _ = appKey.Close() }()
 
 		displayName, _, err := appKey.GetStringValue("DisplayName")
 		if err != nil {
