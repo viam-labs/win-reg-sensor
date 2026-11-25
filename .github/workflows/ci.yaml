@@ -31,8 +31,10 @@ jobs:
       - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
         env:
           GOOS: windows
+          CGO_ENABLED: '0'
         with:
           version: v2.14.0
+          args: --build-tags=no_cgo
 
       - name: go mod tidy
         run: |
@@ -54,4 +56,4 @@ jobs:
           go-version-file: go.mod
 
       - name: Build
-        run: GOOS=windows go build ./...
+        run: GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags=no_cgo ./...
